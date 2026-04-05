@@ -63,6 +63,8 @@ pipeline {
                     def JAR_PATH = "${ARTIFACT_ID}-${VERSION}.jar"
         
                     dir('javaapp-pipeline/target') {
+                        sh 'pwd'
+                        sh 'ls -l'
                         rtUpload(
                             serverId: 'jfrog-server',
                             spec: """{
