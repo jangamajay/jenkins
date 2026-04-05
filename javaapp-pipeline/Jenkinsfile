@@ -64,7 +64,7 @@ pipeline {
         
                     dir('javaapp-pipeline/target') {
                         rtUpload(
-                            serverId: 'jfrog',
+                            serverId: 'jfrog-server',
                             spec: """{
                                 "files": [
                                     {
