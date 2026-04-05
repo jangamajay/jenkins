@@ -68,7 +68,7 @@ pipeline {
                             spec: """{
                                 "files": [
                                     {
-                                        "pattern": "${JAR_PATH}",
+                                        "pattern": ".jar",
                                         "target": "${TARGET_PATH}"
                                     }
                                 ]
