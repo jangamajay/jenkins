@@ -30,20 +30,6 @@ pipeline {
             }
         }
 
-        // stage('Sonar Analysis') {
-        //     steps {
-        //         dir('javaapp-pipeline') {
-        //             withSonarQubeEnv('sonar') {
-        //                 sh '''
-        //                     mvn clean verify sonar:sonar \
-        //                     -Dsonar.projectKey=java-app \
-        //                     -Dsonar.projectName=java-app 
-        //                 '''
-        //             }
-        //         }
-        //     }
-        // }
-
         stage('Build') {
             steps {
                 dir('javaapp-pipeline') {
@@ -58,18 +44,22 @@ pipeline {
                     def GROUP_ID = sh(script: "mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout -f javaapp-pipeline/pom.xml", returnStdout: true).trim()
                     def ARTIFACT_ID = sh(script: "mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout -f javaapp-pipeline/pom.xml", returnStdout: true).trim()
                     def VERSION = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f javaapp-pipeline/pom.xml", returnStdout: true).trim()
-                    def GROUP_PATH = sh(script: "echo '${GROUP_ID}' | tr '.' '/'", returnStdout: true).trim()
-                    def TARGET_PATH = "maven/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/"
-                    def JAR_PATH = "${ARTIFACT_ID}-${VERSION}.jar"
-        
+
+                    def GROUP_PATH = GROUP_ID.replace('.', '/')
+                    def JAR_NAME = "${ARTIFACT_ID}-${VERSION}.jar"
+
+                    echo "JAR_NAME: ${JAR_NAME}"
+
                     dir('javaapp-pipeline/target') {
+                        sh 'ls -l'
+
                         rtUpload(
                             serverId: 'jfrog',
                             spec: """{
                                 "files": [
                                     {
-                                        "pattern": "${JAR_PATH}",
-                                        "target": "${TARGET_PATH}"
+                                        "pattern": "${JAR_NAME}",
+                                        "target": "maven-repo/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/"
                                     }
                                 ]
                             }"""
@@ -81,30 +71,38 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                dir('javaapp-pipeline/target') {
-                    sh '''
-                        if pgrep -f "java -jar java-sample-21-1.0.0.jar" > /dev/null; then
-                            pkill -f "java -jar java-sample-21-1.0.0.jar"
-                            echo "App was running and has been killed."
-                        else
-                            echo "App is not running."
-                        fi
-                        JENKINS_NODE_COOKIE=dontKillMe nohup java -jar java-sample-21-1.0.0.jar > app.log 2>&1 &
-                    '''
+                script {
+                    def ARTIFACT_ID = sh(script: "mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout -f javaapp-pipeline/pom.xml", returnStdout: true).trim()
+                    def VERSION = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f javaapp-pipeline/pom.xml", returnStdout: true).trim()
+
+                    def JAR_NAME = "${ARTIFACT_ID}-${VERSION}.jar"
+
+                    dir('javaapp-pipeline/target') {
+                        sh """
+                            if pgrep -f "java -jar ${JAR_NAME}" > /dev/null; then
+                                pkill -f "java -jar ${JAR_NAME}"
+                                echo "App was running and has been killed."
+                            else
+                                echo "App is not running."
+                            fi
+
+                            JENKINS_NODE_COOKIE=dontKillMe nohup java -jar ${JAR_NAME} > app.log 2>&1 &
+                        """
+                    }
                 }
             }
         }
-
     }
-    
+
     post {
-      always {
-        cleanWs()
-      }
-      failure {
-        emailext attachLog: true, body: 'Pipeline Failed, Please check the logs', subject: 'Job Failed', to: 'artisantek.adithya@gmail.com'
-      }
+        always {
+            cleanWs()
+        }
+        failure {
+            emailext attachLog: true,
+                     body: 'Pipeline Failed, Please check the logs',
+                     subject: 'Job Failed',
+                     to: 'ajayr.akula@gmail.com'
+        }
     }
-
-
 }
