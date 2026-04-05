@@ -54,7 +54,7 @@ pipeline {
                         sh 'ls -l'
 
                         rtUpload(
-                            serverId: 'jfrog',
+                            serverId: 'jfrog-server',
                             spec: """{
                                 "files": [
                                     {
