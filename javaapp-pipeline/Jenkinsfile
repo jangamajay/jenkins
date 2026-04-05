@@ -59,7 +59,7 @@ pipeline {
                                 "files": [
                                     {
                                         "pattern": "*.jar",
-                                        "target": "maven-repo/${GROUP_PATH}/${ARTIFACT_ID}/${VERSION}/"
+                                        "target": "maven-repo/"
                                     }
                                 ]
                             }"""
