@@ -43,17 +43,6 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            mail to: 'ajayr.akula@gmail.com',
-                 subject: 'SUCCESS: Build Passed ✅',
-                 body: 'Build and SonarQube Quality Gate passed successfully.'
-        }
-
-        failure {
-            mail to: 'ajayr.akula@gmail.com',
-                 subject: 'FAILURE: Build Failed ❌',
-                 body: 'Build or Quality Gate failed. Check Jenkins & SonarQube.'
-        }
+    
     }
 }
