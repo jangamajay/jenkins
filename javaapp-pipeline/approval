@@ -1,0 +1,36 @@
+pipeline{
+agent any
+stages {
+stage('checkout') {
+steps {
+}
+stage('test') {
+steps {
+mvn test
+''' }
+}
+stage('package') {
+steps {
+mvn clean package
+''' }
+}
+stage('deploy') {
+steps {
+script{
+def userChoice = input(
+message: 'Do you want to deploy the project?', parameters: [choice(name: 'Proceed', choices: 'Yes\nNo')]
+)
+if (userChoice == 'Yes')
+{
+sh ''' cd javaapp-pipeline
+cd target
+echo "Deploying application..."
+java -jar java-sample-21-1.0.0.jar
+''' } else {
+error("Deployment aborted by user")
+}
+}
+}
+}
+}
+}
